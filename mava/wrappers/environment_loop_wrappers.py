@@ -98,6 +98,8 @@ class DetailedEpisodeStatistics(EnvironmentLoopStatisticsBase):
             for stat in self._summary_stats:
                 self._running_statistics[f"{stat}_{metric}"] = 0.0
         self._running_statistics["raw_sum_episode_return"] = 0.0
+        self._running_statistics["raw_sum_episode_return_SOC"] = 0.0
+        self._running_statistics["raw_sum_episode_return_loading"] = 0.0
 
     def _compute_step_statistics(self, rewards: Dict[str, float]) -> None:
         pass
@@ -105,6 +107,8 @@ class DetailedEpisodeStatistics(EnvironmentLoopStatisticsBase):
     def _compute_episode_statistics(
         self,
         episode_returns: Dict[str, float],
+        episode_returns_SOC: Dict[str, float],
+        episode_returns_loading: Dict[str, float],
         episode_steps: int,
         start_time: float,
     ) -> None:
@@ -112,6 +116,8 @@ class DetailedEpisodeStatistics(EnvironmentLoopStatisticsBase):
         # Collect the results and combine with counts.
         steps_per_second = episode_steps / (time.time() - start_time)
         mean_episode_return = np.mean(np.array(list(episode_returns.values())))
+        mean_episode_return_SOC = np.mean(np.array(list(episode_returns_SOC.values())))
+        mean_episode_return_loading = np.mean(np.array(list(episode_returns_loading.values())))
 
         # Record counts.
         if hasattr(self._executor, "_counts"):
@@ -137,6 +143,8 @@ class DetailedEpisodeStatistics(EnvironmentLoopStatisticsBase):
 
         self._episode_length_stats.push(episode_steps)
         self._episode_return_stats.push(mean_episode_return)
+        self._episode_return_SOC_stats.push(mean_episode_return_SOC)
+        self._episode_return_loading_stats.push(mean_episode_return_loading)
         self._steps_per_second_stats.push(steps_per_second)
 
         for metric in self._metrics:
