@@ -189,6 +189,8 @@ class ParallelEnvironmentLoop(acme.core.Worker):
 
         self._compute_episode_statistics(
             episode_returns,
+            episode_returns_SOC,
+            episode_returns_loading
             episode_steps,
             start_time,
         )
@@ -202,6 +204,8 @@ class ParallelEnvironmentLoop(acme.core.Worker):
             result = {
                 "episode_length": episode_steps,
                 "mean_episode_return": np.mean(list(episode_returns.values())),
+                "mean_episode_return_SOC": np.mean(list(episode_returns_SOC.values())),
+                "mean_episode_return_loading": np.mean(list(episode_returns_loading.values())),
                 "steps_per_second": steps_per_second,
             }
             result.update(counts)
