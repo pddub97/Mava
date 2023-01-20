@@ -132,15 +132,19 @@ class ParallelEnvironmentLoop(acme.core.Worker):
         # for each agent accumulated during the episode.
         rewards: Dict[str, float] = {}
         rewards_SOC: Dict[str, float] = {}
-        rewards_load: Dict[str, float] = {}
+        rewards_loading: Dict[str, float] = {}
         episode_returns: Dict[str, float] = {}
-        actions: Dict[str, float] = {}
+        episode_returns_SOC: Dict[str, float] = {}
+        episode_returns_loading: Dict[str, float] = {}
+        #actions: Dict[str, float] = {}
         for agent, spec in self._environment.reward_spec().items():
             rewards.update({agent: generate_zeros_from_spec(spec)})
             rewards_SOC.update({agent: generate_zeros_from_spec(spec)})
             rewards_load.update({agent: generate_zeros_from_spec(spec)})
             episode_returns.update({agent: generate_zeros_from_spec(spec)})
-            actions.update({agent: generate_zeros_from_spec(spec)})
+            episode_returns_SOC.update({agent: generate_zeros_from_spec(spec)})
+            episode_returns_loading.update({agent: generate_zeros_from_spec(spec)})
+            #actions.update({agent: generate_zeros_from_spec(spec)})
 
         # Run an episode.
         while not timestep.last():
@@ -163,6 +167,8 @@ class ParallelEnvironmentLoop(acme.core.Worker):
                 env_extras = {}
 
             rewards = timestep.reward
+            rewards_SOC = self._environment.world.SOC_reward
+            rewards_loading = self._environment.world.loading_reward
 
             # Have the agent observe the timestep and let the actor update itself.
             self._executor.observe(
@@ -178,6 +184,8 @@ class ParallelEnvironmentLoop(acme.core.Worker):
 
             for agent, reward in rewards.items():
                 episode_returns[agent] = episode_returns[agent] + reward
+                episode_returns_SOC[agent] = episode_returns_SOC[agent] + rewards_SOC[agent]
+                episode_returns_loading[agent] = episode_returns_loading[agent] + rewards_loading[agent]
 
         self._compute_episode_statistics(
             episode_returns,
