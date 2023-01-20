@@ -132,12 +132,15 @@ class ParallelEnvironmentLoop(acme.core.Worker):
         # for each agent accumulated during the episode.
         rewards: Dict[str, float] = {}
         rewards_SOC: Dict[str, float] = {}
+        rewards_load: Dict[str, float] = {}
         episode_returns: Dict[str, float] = {}
+        actions: Dict[str, float] = {}
         for agent, spec in self._environment.reward_spec().items():
             rewards.update({agent: generate_zeros_from_spec(spec)})
             rewards_SOC.update({agent: generate_zeros_from_spec(spec)})
             rewards_load.update({agent: generate_zeros_from_spec(spec)})
             episode_returns.update({agent: generate_zeros_from_spec(spec)})
+            actions.update({agent: generate_zeros_from_spec(spec)})
 
         # Run an episode.
         while not timestep.last():
