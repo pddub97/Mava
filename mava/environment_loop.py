@@ -127,7 +127,7 @@ class ParallelEnvironmentLoop(acme.core.Worker):
 
         # Make the first observation.
         self._executor.observe_first(timestep, extras=env_extras)
-
+        print('start running episode')
         # For evaluation, this keeps track of the total undiscounted reward
         # for each agent accumulated during the episode.
         rewards: Dict[str, float] = {}
@@ -145,7 +145,7 @@ class ParallelEnvironmentLoop(acme.core.Worker):
             episode_returns_SOC.update({agent: generate_zeros_from_spec(spec)})
             episode_returns_loading.update({agent: generate_zeros_from_spec(spec)})
             #actions.update({agent: generate_zeros_from_spec(spec)})
-
+        print('dict created')
         # Run an episode.
         while not timestep.last():
 
@@ -165,8 +165,9 @@ class ParallelEnvironmentLoop(acme.core.Worker):
                 timestep, env_extras = timestep
             else:
                 env_extras = {}
-
+            print('extract reward')
             rewards = timestep.reward
+            print('extract reward SOC')
             rewards_SOC = self._environment.world.SOC_reward
             rewards_loading = self._environment.world.loading_reward
 
@@ -180,13 +181,15 @@ class ParallelEnvironmentLoop(acme.core.Worker):
 
             # Book-keeping.
             episode_steps += 1
+            print('step statistics')
             self._compute_step_statistics(rewards)
 
             for agent, reward in rewards.items():
                 episode_returns[agent] = episode_returns[agent] + reward
+                print('assigning rewards to agents')
                 episode_returns_SOC[agent] = episode_returns_SOC[agent] + rewards_SOC[agent]
                 episode_returns_loading[agent] = episode_returns_loading[agent] + rewards_loading[agent]
-
+        print('ep statistics')
         self._compute_episode_statistics(
             episode_returns,
             episode_returns_SOC,
@@ -194,6 +197,7 @@ class ParallelEnvironmentLoop(acme.core.Worker):
             episode_steps,
             start_time,
         )
+        print('ep statistics end')
         if self._get_running_stats():
             return self._get_running_stats()
         else:
@@ -201,6 +205,7 @@ class ParallelEnvironmentLoop(acme.core.Worker):
 
             # Collect the results and combine with counts.
             steps_per_second = episode_steps / (time.time() - start_time)
+            print('collecting results')
             result = {
                 "episode_length": episode_steps,
                 "mean_episode_return": np.mean(list(episode_returns.values())),
@@ -208,14 +213,18 @@ class ParallelEnvironmentLoop(acme.core.Worker):
                 "mean_episode_return_loading": np.mean(list(episode_returns_loading.values())),
                 "steps_per_second": steps_per_second,
             }
+            print('upd counts')
             result.update(counts)
+            print('end')
             return result
 
     def run_episode_and_log(self) -> loggers.LoggingData:
         """Run an episode and log the results"""
 
         results = self.run_episode()
+        print('bef logs')
         self._logger.write(results)
+        print('after logs logs')
         return results
 
     def run(self) -> None:  # pragma: no cover # noqa: C901
